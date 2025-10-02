@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');  
+const validator = require('validator');
+
+
 const userSchema = new mongoose.Schema({  
     firstName: {  
         type: String,
@@ -13,10 +16,20 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
         trim : true,
+        validate(value) {
+            if(!validator.isEmail(value)) {
+                throw new Error("Invalid email address");
+            }
+        },
     },
     password: {  
         type: String,
-        required: true
+        required: true,
+        validate(value){
+            if(!validator.isStrongPassword(value)) {
+                throw new Error("Password is not strong enough");
+            }
+        }
     },  
     age: {  
         type: Number, 
@@ -33,7 +46,12 @@ const userSchema = new mongoose.Schema({
     },  
     photoUrl: {  
         type: String,
-        default: "https://gimgs2.nohat.cc/thumb/f/350/person-icons-person-icon--m2i8m2A0K9H7N4m2.jpg"
+        default: "https://gimgs2.nohat.cc/thumb/f/350/person-icons-person-icon--m2i8m2A0K9H7N4m2.jpg",
+        validate(value){
+            if(!validator.isURL(value)) {
+                throw new Error("Invalid URL" + value);
+            }
+        },
     },
     about: {  
         type: String,
