@@ -4,10 +4,15 @@ const app = express();
 const User = require('./models/user');
 const bcrypt = require('bcrypt');
 const { validateSignUpData } = require('./utils/validation');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const { userAuth } = require('./middlewares/auth');
+
 
 app.use(express.json());
+app.use(cookieParser());
 
-
+// login user
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -15,17 +20,32 @@ app.post("/login", async (req, res) => {
     if (!user) {
       throw new Error("Invalid Credentials");
     }
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
+    const isPasswordMatch = await user.validatePassword(password);
+    if (isPasswordMatch) {
+      const token = await user.getJWT();
+
+      res.cookie("token", token, { expires: new Date(Date.now() + 10 * 900000) });
+      res.send("Login successful");
+    }
+    else {
       throw new Error("Invalid Credentials");
     }
-    res.send("Login successful");
   }
   catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
 });
 
+// get profile of logged in user
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.send(user);
+  }
+  catch (err) {
+    res.status(400).send("ERROR: " + err.message);
+  }
+});
 
 // add new user
 app.post("/signup", async (req, res) => {
@@ -33,11 +53,9 @@ app.post("/signup", async (req, res) => {
     //validating the data coming from the user
     validateSignUpData(req);
 
-    const {password, firstName, lastName, email} = req.body;
+    const { password, firstName, lastName, email } = req.body;
     //Encrypt the password before saving to database
     const passwordHash = await bcrypt.hash(password, 10); // 10 is the salt rounds
-    console.log(passwordHash);
-
 
     // create new instance of user model
     const user = new User({
@@ -84,6 +102,7 @@ app.get("/feed", async (req, res) => {
   }
 });
 
+// Delete user by ID
 app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
   try {
@@ -109,16 +128,22 @@ app.patch("/user/:userId", async (req, res) => {
     if (!isUpdateAllowed) {
       throw new Error("Update not allowed");
     }
-    if(data?.skills.length > 10) {
+    if (data?.skills.length > 10) {
       throw new Error("You can add maximum 10 skills");
     }
-    const user = await User.findByIdAndUpdate(userId, req.body, 
-                                              { new: true, runValidators: true });
+    const user = await User.findByIdAndUpdate(userId, req.body,
+      { new: true, runValidators: true });
     res.send(user);
   }
   catch (err) {
     res.status(400).send("Something went wrong" + err.message);
   }
+});
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  const user = req.user;
+  res.send(user.firstName + " Sent the connection request");
+
 });
 
 connectDB()
@@ -130,6 +155,4 @@ connectDB()
   })
   .catch((err) => {
     console.error("Database connection failed");
-  });
-
-
+  }); 
