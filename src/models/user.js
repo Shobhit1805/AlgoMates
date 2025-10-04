@@ -40,11 +40,10 @@ const userSchema = new mongoose.Schema({
     },  
     gender: {  
         type: String,
-        validate(value) {
-            if(!["male", "female", "other"].includes(value)) {
-                throw new Error("Invalid gender");
-            }
-        },
+        enum: {
+        values: ["male", "female", "other"],
+        message: `{VALUE} is not a valid gender type`,
+      },
     },  
     photoUrl: {  
         type: String,
@@ -57,10 +56,16 @@ const userSchema = new mongoose.Schema({
     },
     about: {  
         type: String,
-        default: "This is default about"
+        default: "This is default about",
+        maxlength: 500
     },
     skills: {  
-        type: [String]
+        type: [String],
+        validate(value){
+            if(value.length > 10) {
+                throw new Error("You can add maximum 10 skills");
+            }
+        }
     }   
 }, 
 {
