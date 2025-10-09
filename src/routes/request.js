@@ -48,7 +48,7 @@ requestRouter.post(
 
       res.json({
         message:
-          req.user.firstName + " is " + status + " in " + toUser.firstName,
+          req.user.firstName + " " + status + " in " + toUser.firstName,
         data,
       });
     } catch (err) {
@@ -67,7 +67,7 @@ requestRouter.post(
 
       const allowedStatus = ["accepted", "rejected"];
       if (!allowedStatus.includes(status)) {
-        return res.status(400).json({ messaage: "Status not allowed!" });
+        return res.status(400).json({ message: "Status not allowed!" });
       }
 
       const connectionRequest = await ConnectionRequest.findOne({
