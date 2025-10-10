@@ -24,7 +24,7 @@ const connectionRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }); // ConnectionRequest may be alrge in number that is why required 
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }); // ConnectionRequest may be large in number that is why required
 
 connectionRequestSchema.pre("save", function (next) {
   const connectionRequest = this;
