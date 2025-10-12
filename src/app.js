@@ -3,8 +3,12 @@ const connectDB = require('./config/database');
 const app = express();
 const User = require('./models/user');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
-
+app.use(cors({
+  origin: 'http://localhost:5173', // frontend url
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -15,7 +19,7 @@ const userRouter = require('./routes/user');
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
-app.use("/", requestRouter);
+app.use("/", requestRouter);      
 app.use("/", userRouter);
 
 connectDB()
