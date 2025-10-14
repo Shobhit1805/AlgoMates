@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     lastName: {  
         type: String   
     },  
-    email: {  
+    emailId: {  
         type: String,
         lowercase: true,
         required: true,
@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
         trim : true,
         validate(value) {
             if(!validator.isEmail(value)) {
-                throw new Error("Invalid email address");
+                throw new Error("Invalid emailId address");
             }
         },
     },
