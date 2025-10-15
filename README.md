@@ -1,4 +1,4 @@
-# AlgoMates Backend API
+# AlgoMates Backend 
 
 A RESTful API backend for AlgoMates - a developer networking platform that helps programmers connect, collaborate, and find coding partners based on shared interests and skills.
 
