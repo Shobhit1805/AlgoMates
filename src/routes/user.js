@@ -70,27 +70,35 @@ userRouter.get("/feed",
 
             const loggedInUser = req.user;
 
+            // Find all connection requests involving the logged-in user
             const connectionRequests = await ConnectionRequest.find({
                 $or: [
                     { toUserId: loggedInUser._id },
                     { fromUserId: loggedInUser._id },
                 ],
-            }).select("toUserId fromUserId status");
+            }).select("toUserId fromUserId");
 
-
-            const excludedUserFromFeed = new Set();
-            connectionRequests.forEach((req) => {
-                excludedUserFromFeed.add(req.toUserId.toString());
-                excludedUserFromFeed.add(req.fromUserId.toString());
+            const excludedUserIds = new Set();
+            
+            excludedUserIds.add(loggedInUser._id.toString());
+            
+            connectionRequests.forEach((request) => {
+                excludedUserIds.add(request.toUserId.toString());
+                excludedUserIds.add(request.fromUserId.toString());
             });
 
+            console.log("Logged in user ID:", loggedInUser._id.toString());
+            console.log("Excluded IDs:", Array.from(excludedUserIds));
+
+            // Find users NOT in the excluded list
             const users = await User.find({
-                $and: [
-                    { _id: { $nin: Array.from(excludedUserFromFeed) } }, // not in 
-                ],
-            }).select(USERs_SAFE_DATA)
-                .skip(skip)
-                .limit(limit);
+                _id: { $nin: Array.from(excludedUserIds) }
+            })
+            .select(USERs_SAFE_DATA)
+            .skip(skip)
+            .limit(limit);
+
+            console.log("Users found:", users.length);
 
             res.json({ data: users });
 
