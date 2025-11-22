@@ -22,7 +22,7 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     const savedUser = await user.save();
-    const token = await savedUser.getJWT();
+    const token = savedUser.getJWT(); // REMOVED await
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
@@ -45,7 +45,7 @@ authRouter.post("/login", async (req, res) => {
     const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
-      const token = await user.getJWT();
+      const token = user.getJWT(); // REMOVED await
 
       res.cookie("token", token, {
         expires: new Date(Date.now() + 8 * 3600000),
