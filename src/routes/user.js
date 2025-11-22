@@ -87,8 +87,8 @@ userRouter.get("/feed",
                 excludedUserIds.add(request.fromUserId.toString());
             });
 
-            console.log("Logged in user ID:", loggedInUser._id.toString());
-            console.log("Excluded IDs:", Array.from(excludedUserIds));
+            // console.log("Logged in user ID:", loggedInUser._id.toString());
+            // console.log("Excluded IDs:", Array.from(excludedUserIds));
 
             // Find users NOT in the excluded list
             const users = await User.find({

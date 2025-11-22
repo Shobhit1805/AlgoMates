@@ -10,7 +10,7 @@ const userAuth = async (req, res, next) => {
     return res.status(401).send("Unauthorized: No token provided");
   }
 
-  const decodedObj = await jwt.verify(token, process.env.JWT_SECRET,);
+  const decodedObj = await jwt.verify(token, "Algomates@2025$");
   const {_id} = decodedObj;
 
 

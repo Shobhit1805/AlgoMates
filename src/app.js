@@ -7,6 +7,7 @@ const User = require('./models/user');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { userAuth } = require('./middlewares/auth');
+const paymentRouter = require('./routes/payments');
 
 
 app.use(cors({
@@ -22,10 +23,13 @@ const requestRouter = require('./routes/request');
 const userRouter = require('./routes/user');
 const { configDotenv } = require('dotenv');
 
+
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);      
 app.use("/", userRouter);
+// app.use("/", paymentRouter);
+
 
 connectDB()
   .then(() => {
