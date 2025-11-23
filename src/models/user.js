@@ -76,9 +76,7 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.getJWT = function () {
     const user = this;
 
-    // jwt.sign is synchronous when used without a callback, so keep this method synchronous
-    // Use the same secret as the auth middleware ('Algomates@2025$') to avoid verify errors
-    const token = jwt.sign({ _id: user._id }, "Algomates@2025$", {
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
     });
 
