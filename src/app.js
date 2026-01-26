@@ -6,6 +6,8 @@ const User = require('./models/user');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { userAuth } = require('./middlewares/auth');
+const http = require('http');
+const initializeSocket = require('./utils/socket');
 
 
 app.use(cors({
@@ -28,11 +30,17 @@ app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter); 
 
+/// create server older way (required for socket.io)
+const server = http.createServer(app);
+
+// this initialize socket.io
+initializeSocket(server);
+
 
 connectDB()
   .then(() => {
     console.log("Database connected successfully");
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
       console.log(`Server is successfully listening on port ${process.env.PORT}`);
     });
   })
