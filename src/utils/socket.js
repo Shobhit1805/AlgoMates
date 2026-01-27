@@ -33,7 +33,18 @@ io.on('connection', (socket) => {
         const roomId = getSecretRoomId(userId, targetUserId);
         console.log("Message from " + firstName + ": " + text);
 
-        // bug : check if the users are connected before allowing message sending
+        // check if the users are friends or not before doing anything further
+        ConnectionRequest.findOne({
+          $or: [
+            { fromUserId: userId, toUserId: targetUserId, status: 'accepted' },
+            { fromUserId: targetUserId, toUserId: userId, status: 'accepted' }
+          ]
+        }, async (err, connection) => {
+          if (err || !connection) {
+            console.log("Users are not connected. Message not sent.");
+            return;
+          } 
+        });
 
         // Find the chat between the two users
         let chat = await Chat.findOne({
