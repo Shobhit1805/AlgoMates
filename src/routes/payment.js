@@ -136,4 +136,34 @@ paymentRouter.get("/premium/verify", userAuth, async (req, res) => {
     return res.json({ ...user });
 });
 
+
+// Endpoint to fetch available premium plans
+paymentRouter.get("/premium/plans", (req, res) => {
+    try {
+        res.json({
+            silver: {
+                price: membershipAmount.silver,
+                duration: "3 months",
+                features: [
+                    "Chat with other developers",
+                    "100 connection requests per day",
+                    "Blue verification tick"
+                ]
+            },
+            gold: {
+                price: membershipAmount.gold,
+                duration: "6 months",
+                features: [
+                    "Chat with other developers",
+                    "Unlimited connection requests",
+                    "Blue verification tick"
+                ]
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Unable to fetch plans" });
+    }
+});
+
+
 module.exports = paymentRouter;

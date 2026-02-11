@@ -1,80 +1,98 @@
-const socket = require('socket.io');
-const crypto = require('crypto');
-const { Chat } = require('../models/chat');
-const ConnectionRequest = require('../models/connectionRequest');
-// check it
+const socketIO = require("socket.io");
+const crypto = require("crypto");
+const { Chat } = require("../models/chat");
+const ConnectionRequest = require("../models/connectionRequest");
+
+// Generate a deterministic private room ID for two users
 const getSecretRoomId = (userId1, userId2) => {
-    const sortedIds = [userId1, userId2].sort().join('_');
-    const hash = crypto.createHash('sha256');
-    hash.update(sortedIds);
-    return hash.digest('hex');
+  const sortedIds = [userId1, userId2].sort().join("_");
+  const hash = crypto.createHash("sha256");
+  hash.update(sortedIds);
+  return hash.digest("hex");
 };
 
-const initializeSocket = (server) => {  
-    const socket = require('socket.io');
-    const io = socket(server, {
-  cors: {
-    origin: 'http://localhost:5173', // frontend url
-  },
-});
-
-// socket.io connection event handler
-io.on('connection', (socket) => {
-
-  socket.on('joinChat', ({firstName, userId, targetUserId}) => {
-    const roomId = getSecretRoomId(userId, targetUserId);
-    console.log(firstName + "joined room: " + roomId);
-    socket.join(roomId);
+const initializeSocket = (server) => {
+  const io = socketIO(server, {
+    cors: {
+      origin: "http://localhost:5173", // frontend URL
+      credentials: true,
+    },
   });
 
-  socket.on('sendMessage', async ({firstName, userId, targetUserId, text}) => {
-    // code to save message to database to be added here
-    try {
-        const roomId = getSecretRoomId(userId, targetUserId);
-        console.log("Message from " + firstName + ": " + text);
+  io.on("connection", (socket) => {
+    // Join chat room
+    socket.on("joinChat", ({ firstName, userId, targetUserId }) => {
+      const roomId = getSecretRoomId(userId, targetUserId);
+      console.log(firstName + " joined room: " + roomId);
+      socket.join(roomId);
+    });
 
-        // check if the users are friends or not before doing anything further
-        ConnectionRequest.findOne({
-          $or: [
-            { fromUserId: userId, toUserId: targetUserId, status: 'accepted' },
-            { fromUserId: targetUserId, toUserId: userId, status: 'accepted' }
-          ]
-        }, async (err, connection) => {
-          if (err || !connection) {
+    // Send message
+    socket.on(
+      "sendMessage",
+      async ({ firstName, lastName, userId, targetUserId, text }) => {
+        try {
+          const roomId = getSecretRoomId(userId, targetUserId);
+          console.log("Message from " + firstName + ": " + text);
+
+          // ✅ Check if users are connected (friends)
+          const connection = await ConnectionRequest.findOne({
+            $or: [
+              {
+                fromUserId: userId,
+                toUserId: targetUserId,
+                status: "accepted",
+              },
+              {
+                fromUserId: targetUserId,
+                toUserId: userId,
+                status: "accepted",
+              },
+            ],
+          });
+
+          if (!connection) {
             console.log("Users are not connected. Message not sent.");
             return;
-          } 
-        });
+          }
 
-        // Find the chat between the two users
-        let chat = await Chat.findOne({
-            participants: { $all: [userId, targetUserId] } // what all does : it means both userId and targetUserId should be in participants array
-        });
+          // ✅ Find existing chat
+          let chat = await Chat.findOne({
+            participants: { $all: [userId, targetUserId] },
+          });
 
-        // If chat doesn't exist, create a new one
-        if (!chat) {
+          // ✅ Create chat if it doesn't exist
+          if (!chat) {
             chat = new Chat({
-                participants: [userId, targetUserId],
-                messages: [],
+              participants: [userId, targetUserId],
+              messages: [],
             });
-        }
+          }
 
-        // Add the new message to the chat
-        chat.messages.push({
+          // ✅ Save message
+          chat.messages.push({
             senderId: userId,
-            text: text,
-        });
-        await chat.save();
-        io.to(roomId).emit('messageReceived', {firstName, lastName, text});
-    } 
-    catch (error) {
-      console.error("Error saving message to database: ", error);
-    }
-  });
+            text,
+          });
 
-  socket.on('disconnect', () => {
+          await chat.save();
+
+          // ✅ Emit message to room
+          io.to(roomId).emit("messageReceived", {
+            firstName,
+            lastName,
+            text,
+          });
+        } catch (error) {
+          console.error("Error saving message to database:", error);
+        }
+      }
+    );
+
+    socket.on("disconnect", () => {
+      // Optional: cleanup / logs
+    });
   });
-});
 };
 
 module.exports = initializeSocket;
